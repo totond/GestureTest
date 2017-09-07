@@ -8,7 +8,9 @@ import android.view.Window;
 import android.view.WindowManager;
 
 /**
- * 用于辅助调节亮度的类
+ * Author: yanzhikai
+ * Description: 用于辅助调节亮度的类
+ * Email: yanzhikai_yjk@qq.com
  */
 
 public class BrightnessHelper {
@@ -66,6 +68,7 @@ public class BrightnessHelper {
         return maxBrightness;
     }
 
+    //设置当前APP的亮度
     public void setAppBrightness(float brightnessPercent, Activity activity){
         Window window = activity.getWindow();
         WindowManager.LayoutParams layoutParams = window.getAttributes();

@@ -6,19 +6,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements VideoGestureListener{
+public class MainActivity extends AppCompatActivity implements VideoGestureRelativeLayout.VideoGestureListener {
     private final String TAG = "gesturetestm";
     private VideoGestureRelativeLayout ly_VG;
     private ShowChangeLayout scl;
     private AudioManager mAudioManager;
     private int maxVolume = 0;
     private int oldVolume = 0;
-    private int currentProgress = 0;
+    private int newProgress = 0, oldProgress = 0;
     private BrightnessHelper mBrightnessHelper;
     private float brightness = 1;
     private Window mWindow;
@@ -33,11 +32,12 @@ public class MainActivity extends AppCompatActivity implements VideoGestureListe
 
         scl = (ShowChangeLayout) findViewById(R.id.scl);
 
+        //初始化获取音量属性
         mAudioManager = (AudioManager)getSystemService(Service.AUDIO_SERVICE);
         maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 
+        //初始化亮度调节
         mBrightnessHelper = new BrightnessHelper(this);
-        ly_VG.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
         //下面这是设置当前APP亮度的方法配置
         mWindow = getWindow();
@@ -49,18 +49,24 @@ public class MainActivity extends AppCompatActivity implements VideoGestureListe
 
     @Override
     public void onDown(MotionEvent e) {
+        //每次按下的时候更新当前亮度和音量，还有进度
+        oldProgress = newProgress;
         oldVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         brightness = mLayoutParams.screenBrightness;
         if (brightness == -1){
             //一开始是默认亮度的时候，获取系统亮度，计算比例值
-            brightness = mBrightnessHelper.getBrightness()/255;
+            brightness = mBrightnessHelper.getBrightness() / 255f;
         }
+    }
+
+    @Override
+    public void onEndFF_REW(MotionEvent e) {
+        makeToast("设置进度为" + newProgress);
     }
 
     @Override
     public void onVolumeGesture(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
 
-//        Log.d(TAG, "onVolumeGesture: maxVolume " + maxVolume);
         Log.d(TAG, "onVolumeGesture: oldVolume " + oldVolume);
         int value = ly_VG.getHeight()/maxVolume ;
         int newVolume = (int) ((e1.getY() - e2.getY())/value + oldVolume);
@@ -82,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements VideoGestureListe
 //        }
         Log.d(TAG, "onVolumeGesture: newVolume "+ newVolume);
 
-
+        //要强行转Float类型才能算出小数点，不然结果一直为0
         int volumeProgress = (int) (newVolume/Float.valueOf(maxVolume) *100);
         if (volumeProgress >= 50){
             scl.setImageResource(R.drawable.volume_higher_w);
@@ -93,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements VideoGestureListe
         }
         scl.setProgress(volumeProgress);
         scl.show();
-
     }
 
     @Override
@@ -133,7 +138,6 @@ public class MainActivity extends AppCompatActivity implements VideoGestureListe
         int oldBrightness = mBrightnessHelper.getBrightness();
         Log.d(TAG, "onBrightnessGesture: oldBrightness: " + oldBrightness);
         int newBrightness = oldBrightness + brightness;
-        mBrightnessHelper.setSystemBrightness(newBrightness);
         Log.d(TAG, "onBrightnessGesture: newBrightness: " + newBrightness);
         //设置亮度
         mBrightnessHelper.setSystemBrightness(newBrightness);
@@ -147,24 +151,25 @@ public class MainActivity extends AppCompatActivity implements VideoGestureListe
 
     @Override
     public void onFF_REWGesture(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        float offset = e1.getX() - e2.getX();
+        float offset = e2.getX() - e1.getX();
         Log.d(TAG, "onFF_REWGesture: offset " + offset);
         Log.d(TAG, "onFF_REWGesture: ly_VG.getWidth()" + ly_VG.getWidth());
-        if (distanceX < 0) {
+        //根据移动的正负决定快进还是快退
+        if (offset > 0) {
             scl.setImageResource(R.drawable.ff);
-            currentProgress += (int) (Math.abs(distanceX)/ly_VG.getWidth() * 100);
-            if (currentProgress > 100){
-                currentProgress = 100;
+            newProgress = (int) (oldProgress + offset/ly_VG.getWidth() * 100);
+            if (newProgress > 100){
+                newProgress = 100;
             }
         }else {
             scl.setImageResource(R.drawable.fr);
-            currentProgress -= (int) (Math.abs(distanceX)/ly_VG.getWidth() * 100);
-            if (currentProgress < 0){
-                currentProgress = 0;
+            newProgress = (int) (oldProgress + offset/ly_VG.getWidth() * 100);
+            if (newProgress < 0){
+                newProgress = 0;
             }
         }
 
-        scl.setProgress(currentProgress);
+        scl.setProgress(newProgress);
         scl.show();
     }
 

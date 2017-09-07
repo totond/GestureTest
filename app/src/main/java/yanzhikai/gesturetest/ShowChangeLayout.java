@@ -9,9 +9,10 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 /**
- * Created by yany on 2017/7/4.
+ * Author: yanzhikai
+ * Description: 中间用于显示状态的Layout
+ * Email: yanzhikai_yjk@qq.com
  */
-
 public class ShowChangeLayout extends RelativeLayout {
     private static final String TAG = "gesturetest";
     private ImageView iv_center;
@@ -38,6 +39,7 @@ public class ShowChangeLayout extends RelativeLayout {
         ShowChangeLayout.this.setVisibility(GONE);
     }
 
+    //显示
     public void show(){
         setVisibility(VISIBLE);
         removeCallbacks(mHideRunnable);
@@ -55,10 +57,12 @@ public class ShowChangeLayout extends RelativeLayout {
         this.duration = duration;
     }
 
+    //设置显示图片
     public void setImageResource(int resource){
         iv_center.setImageResource(resource);
     }
 
+    //隐藏自己的Runnable
     private class HideRunnable implements Runnable{
         @Override
         public void run() {
